@@ -48,6 +48,10 @@ module.exports = class Bot
 
           commits.forEach (commit) =>
             commit.url = "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
+            request.post "http:gist.io", form:
+                url:commit.url
+            , (e,r, body) =>
+                console.log body
             commit.message = "#{owner} just made change on #{repo}, and here's the commit url: #{commit.url}"
             console.log commit.url
             @irc.say @channels, commit.message

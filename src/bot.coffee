@@ -48,7 +48,7 @@ module.exports = class Bot
 
           commits.forEach (commit) =>
             commit.url = "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
-            request.post "http:gist.io", form:
+            request.post "http://gist.io", form:
                 url:commit.url
             , (e,r, body) =>
                 console.log body

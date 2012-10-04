@@ -48,8 +48,9 @@ module.exports = class Bot
 
           commits.forEach (commit) =>
             commit.url = "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
+            commit.message = "#{owner} just made change on #{repo}, and here's the commit url: #{commit.url}"
             console.log commit.url
-            @irc.say @channels, commit.url
+            @irc.say @channels, commit.message
 
     , (e) ->
       console.log 'done', e

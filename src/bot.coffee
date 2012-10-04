@@ -47,7 +47,9 @@ module.exports = class Bot
           @paths[path] = new Date()
 
           commits.forEach (commit) =>
-            console.log "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
+            commit.url = "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
+            console.log commit.url
+            @irc.say @channels, commit.url
 
     , (e) ->
       console.log 'done', e

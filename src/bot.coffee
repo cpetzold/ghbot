@@ -7,7 +7,6 @@ module.exports = class Bot
 
   constructor: (@server, @channels, @nick = 'ghbot')->
     @paths = {}
-    @since = new Date()
 
     @irc = new irc.Client @server, @nick, { @channels }
     @irc.on 'message', @handleMessage
@@ -24,7 +23,7 @@ module.exports = class Bot
 
 
   add: (path) ->
-    @paths[path] = true
+    @paths[path] = new Date()
     console.log @paths
 
   remove: (path) ->
@@ -32,17 +31,16 @@ module.exports = class Bot
     console.log @paths
 
   poll: =>
-    sinceIso = @since.toISOString()
-    @since = new Date()
-
-    console.log 'polling since', sinceIso
-    
-    async.forEach Object.keys(@paths), (path, cb) ->
+    async.forEach Object.keys(@paths), (path, cb) =>
+      since = @paths[path].toISOString()
       path = path.split '/'
       owner = path[0]
       repo = path[1]
+
+      console.log 'polling', path, 'since', since
       
-      request.get "https://api.github.com/repos/#{owner}/#{repo}/commits?since=#{sinceIso}", (e, r, body) =>
+      request.get "https://api.github.com/repos/#{owner}/#{repo}/commits?since=#{since}", (e, r, body) =>
         console.log JSON.parse(body)
+
     , (e) ->
       console.log 'done', e

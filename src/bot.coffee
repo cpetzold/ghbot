@@ -32,15 +32,22 @@ module.exports = class Bot
 
   poll: =>
     async.forEach Object.keys(@paths), (path, cb) =>
+      pathSplit = path.split '/'
+      owner = pathSplit[0]
+      repo = pathSplit[1]
       since = @paths[path].toISOString()
-      path = path.split '/'
-      owner = path[0]
-      repo = path[1]
 
       console.log 'polling', path, 'since', since
       
       request.get "https://api.github.com/repos/#{owner}/#{repo}/commits?since=#{since}", (e, r, body) =>
-        console.log JSON.parse(body)
+        return if e or !body
+        commits = JSON.parse(body)
+
+        if commits?.length
+          @paths[path] = new Date()
+
+          commits.forEach (commit) =>
+            console.log "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
 
     , (e) ->
       console.log 'done', e

@@ -1,0 +1,2 @@
+irc = require 'irc'
+

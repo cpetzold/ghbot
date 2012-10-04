@@ -1,0 +1,13 @@
+{
+  "name": "ghbot",
+  "version": "0.0.0",
+  "description": "",
+  "repository": "",
+  "author": "",
+  "dependencies": {
+    "irc": "*"
+  },
+  "devDependencies": {
+    "coffee-script": "*"
+  }
+}

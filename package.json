@@ -6,7 +6,9 @@
   "author": "",
   "dependencies": {
     "irc": "*",
-    "request": "*"
+    "request": "*",
+    "commander": "*",
+    "async": "*"
   },
   "devDependencies": {
     "coffee-script": "*"

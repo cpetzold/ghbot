@@ -16,10 +16,10 @@ module.exports = class Bot
 
     setInterval @poll, 10000
 
-    repos.find({},{stream:true}).each (repo)->
+    repos.find({},{stream:true}).each (repo) =>
       owner = repo.owner
       r = repo.repo
-      @add("#{owner}/#{r}")
+      @paths["#{owner}/#{r}"] = new Date()
       
   handleMessage: (from, to, message) =>
     message = message.split ' '
@@ -31,19 +31,27 @@ module.exports = class Bot
 
 
   add: (path) ->
-    return if @paths[path]
+    if @paths[path]
+      @irc.say @channels, c.gray("#{path} is already being tracked")
+      return
+      
     @paths[path] = new Date()
     pathSplit = path.split '/'
     owner = pathSplit[0]
     repo = pathSplit[1]
     repos.insert {owner,repo}
+    @irc.say @channels, "started tracking #{c.green.bold(path)}"
 
   remove: (path) ->
+    if not @paths[path]
+      @irc.say @channels, c.gray("#{path} is not currently being tracked")
+      return
     delete @paths[path]
     pathSplit = path.split '/'
     owner = pathSplit[0]
     repo = pathSplit[1]
     repos.remove {owner,repo}
+    @irc.say @channels, "stopped tracking #{c.red.bold(path)}"
 
   poll: =>
     async.forEach Object.keys(@paths), (path, cb) =>
@@ -67,7 +75,7 @@ module.exports = class Bot
                 url:commit.url
             , (e,r, body) =>
                 commit.url = r.headers.location
-                commit.message = "#{c.cyan(owner)} just made a change to #{c.bold.cyan(repo)} #{c.red(commit.url)}: \"#{c.gray(commit.commit.message)}\""
+                commit.message = "#{c.cyan(commit.committer.login)} just made a change to #{c.bold.cyan(path)} #{c.red(commit.url)}: #{c.gray(commit.commit.message)}"
                 @irc.say @channels, commit.message
 
     , (e) ->

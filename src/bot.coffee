@@ -14,7 +14,7 @@ module.exports = class Bot
     @irc = new irc.Client @server, @nick, { @channels }
     @irc.on 'message', @handleMessage
 
-    setInterval @poll, 10000
+    setInterval @poll, 30*1000
 
     repos.find({},{stream:true}).each (repo) =>
       owner = repo.owner

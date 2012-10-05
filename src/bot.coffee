@@ -3,6 +3,8 @@ http = require 'http'
 request = require 'request'
 async = require 'async'
 c = require 'irc-colors'
+db = require('monk')('localhost/bot')
+repos = db.get "repos"
 
 module.exports = class Bot
 
@@ -14,6 +16,11 @@ module.exports = class Bot
 
     setInterval @poll, 10000
 
+    repos.find({},{stream:true}).each (repo)->
+      owner = repo.owner
+      r = repo.repo
+      @add("#{owner}/#{r}")
+      
   handleMessage: (from, to, message) =>
     message = message.split ' '
     command = message[0]
@@ -24,12 +31,19 @@ module.exports = class Bot
 
 
   add: (path) ->
+    return if @paths[path]
     @paths[path] = new Date()
-    console.log @paths
+    pathSplit = path.split '/'
+    owner = pathSplit[0]
+    repo = pathSplit[1]
+    repos.insert {owner,repo}
 
   remove: (path) ->
     delete @paths[path]
-    console.log @paths
+    pathSplit = path.split '/'
+    owner = pathSplit[0]
+    repo = pathSplit[1]
+    repos.remove {owner,repo}
 
   poll: =>
     async.forEach Object.keys(@paths), (path, cb) =>
@@ -38,7 +52,7 @@ module.exports = class Bot
       repo = pathSplit[1]
       since = @paths[path].toISOString()
 
-      console.log 'polling', path, 'since', since
+      #console.log 'polling', path, 'since', since
       
       request.get "https://api.github.com/repos/#{owner}/#{repo}/commits?since=#{since}", (e, r, body) =>
         return if e or !body

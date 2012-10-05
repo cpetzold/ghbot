@@ -8,7 +8,8 @@
     "irc": "*",
     "request": "*",
     "commander": "*",
-    "async": "*"
+    "async": "*",
+    "irc-colors": "*"
   },
   "devDependencies": {
     "coffee-script": "*"

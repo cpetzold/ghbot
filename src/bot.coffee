@@ -2,6 +2,7 @@ irc = require 'irc'
 http = require 'http'
 request = require 'request'
 async = require 'async'
+c = require 'irc-colors'
 
 module.exports = class Bot
 
@@ -51,10 +52,9 @@ module.exports = class Bot
             request.post "http://git.io", form:
                 url:commit.url
             , (e,r, body) =>
-                console.log r.headers.location
-            commit.message = "#{owner} just made change on #{repo}, and here's the commit url: #{commit.url}"
-            console.log commit.url
-            @irc.say @channels, commit.message
+                commit.url = r.headers.location
+                commit.message = "#{c.cyan(owner)} just made a change to #{c.bold.cyan(repo)} #{c.red(commit.url)}: \"#{c.gray(commit.commit.message)}\""
+                @irc.say @channels, commit.message
 
     , (e) ->
       console.log 'done', e

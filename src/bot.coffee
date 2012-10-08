@@ -31,9 +31,10 @@ module.exports = class Bot
 
 
   add: (path) ->
+    if !path
+      return @irc.say @channels, c.gray("usage: !add <username>/<repository>")
     if @paths[path]
-      @irc.say @channels, c.gray("#{path} is already being tracked")
-      return
+      return @irc.say @channels, c.gray("#{path} is already being tracked")
       
     @paths[path] = new Date()
     pathSplit = path.split '/'
@@ -43,9 +44,11 @@ module.exports = class Bot
     @irc.say @channels, "started tracking #{c.green.bold(path)}"
 
   remove: (path) ->
-    if not @paths[path]
-      @irc.say @channels, c.gray("#{path} is not currently being tracked")
-      return
+    if !path
+      return @irc.say @channels, c.gray("usage: !remove <username>/<repository>")
+    if !@paths[path]
+      return @irc.say @channels, c.gray("#{path} is not currently being tracked")
+      
     delete @paths[path]
     pathSplit = path.split '/'
     owner = pathSplit[0]

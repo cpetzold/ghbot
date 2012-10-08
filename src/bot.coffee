@@ -35,13 +35,13 @@ module.exports = class Bot
       return @irc.say @channels, c.gray("usage: !add <username>/<repository>")
     if @paths[path]
       return @irc.say @channels, c.gray("#{path} is already being tracked")
-      
-    @paths[path] = new Date()
-    pathSplit = path.split '/'
-    owner = pathSplit[0]
-    repo = pathSplit[1]
-    repos.insert {owner,repo}
-    @irc.say @channels, "started tracking #{c.green.bold(path)}"
+    @check path, ()->
+      @paths[path] = new Date()
+      pathSplit = path.split '/'
+      owner = pathSplit[0]
+      repo = pathSplit[1]
+      repos.insert {owner,repo}
+      @irc.say @channels, "started tracking #{c.green.bold(path)}"
 
   remove: (path) ->
     if !path
@@ -83,3 +83,16 @@ module.exports = class Bot
 
     , (e) ->
       console.log 'done', e
+ 
+  check: (path,cb) =>
+    pathSplit = path.split '/'
+    owner = pathSplit[0]
+    repo = pathSplit[1]
+    request.get "https://api.github.com/repos/#{owner}/#{repo}",(e,r,body) =>
+      b = JSON.parse(body)
+      if b.message = "Not Found"
+        @irc.say @channels, c.red("#{c.bold(path)} is not a valid github repo")
+      else
+        cb()
+        
+

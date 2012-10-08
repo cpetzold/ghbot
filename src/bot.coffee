@@ -71,13 +71,13 @@ module.exports = class Bot
 
         if commits?.length
           @paths[path] = new Date()
-          committer = if commit.committer then commit.committer.login else "Anon"
 
           commits.forEach (commit) =>
             commit.url = "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
             request.post "http://git.io", form:
                 url:commit.url
             , (e,r, body) =>
+                committer = if commit.committer then commit.committer.login else "Anon"
                 commit.url = r.headers.location
                 commit.message = "#{c.cyan(committer)} just made a change to #{c.bold.cyan(path)} #{c.red(commit.url)} : #{c.gray(commit.commit.message)}"
                 @irc.say @channels, commit.message

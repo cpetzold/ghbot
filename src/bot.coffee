@@ -71,6 +71,7 @@ module.exports = class Bot
 
         if commits?.length
           @paths[path] = new Date()
+          committer = if commit.committer then commit.committer.login else "Anon"
 
           commits.forEach (commit) =>
             commit.url = "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
@@ -78,7 +79,7 @@ module.exports = class Bot
                 url:commit.url
             , (e,r, body) =>
                 commit.url = r.headers.location
-                commit.message = "#{c.cyan(commit.committer.login)} just made a change to #{c.bold.cyan(path)} #{c.red(commit.url)} : #{c.gray(commit.commit.message)}"
+                commit.message = "#{c.cyan(committer)} just made a change to #{c.bold.cyan(path)} #{c.red(commit.url)} : #{c.gray(commit.commit.message)}"
                 @irc.say @channels, commit.message
 
     , (e) ->

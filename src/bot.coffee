@@ -35,7 +35,7 @@ module.exports = class Bot
       return @irc.say @channels, c.gray("usage: !add <username>/<repository>")
     if @paths[path]
       return @irc.say @channels, c.gray("#{path} is already being tracked")
-    @check path, ()=>
+    @check path, =>
       @paths[path] = new Date()
       pathSplit = path.split '/'
       owner = pathSplit[0]
@@ -77,7 +77,7 @@ module.exports = class Bot
             request.post "http://git.io", form:
                 url:commit.url
             , (e,r, body) =>
-                committer = if commit.committer then commit.committer.login else "Anon"
+                committer = if commit.committer then commit.committer.login else commit.commit.committer.name
                 commit.url = r.headers.location
                 commit.message = "#{c.cyan(committer)} just made a change to #{c.bold.cyan(path)} #{c.red(commit.url)} : #{c.gray(commit.commit.message)}"
                 @irc.say @channels, commit.message

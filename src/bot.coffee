@@ -41,7 +41,7 @@ module.exports = class Bot
       owner = pathSplit[0]
       repo = pathSplit[1]
       repos.insert {owner,repo}
-      @irc.say @channels, "started tracking #{c.green.bold(path)} #{c.gray("[http://github.com/"+path+"]")} "
+      @irc.say @channels, "started tracking #{c.green.bold(path)} #{c.gray("[ http://github.com/"+path+" ]")} "
 
   remove: (path) =>
     if !path

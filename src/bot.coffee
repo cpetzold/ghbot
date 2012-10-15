@@ -78,8 +78,10 @@ module.exports = class Bot
                 url:commit.url
             , (e,r, body) =>
                 committer = if commit.committer then commit.committer.login else commit.commit.committer.name
+                commit-pieces = commit.commit.message.split '\n'
+                shortlog = commit-pieces[0]
                 commit.url = r.headers.location
-                commit.message = "#{c.underline(committer)} just made a change to #{c.bold(path)} #{c.red(commit.url)} : #{c.gray(commit.commit.message)}"
+                commit.message = "#{c.underline(committer)} just made a change to #{c.bold(path)} #{c.red(commit.url)} : #{c.gray(shortlog)}"
                 @irc.say @channels, commit.message
 
     , (e) ->

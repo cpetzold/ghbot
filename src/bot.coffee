@@ -8,8 +8,11 @@ repos = db.get "repos"
 
 module.exports = class Bot
 
-  constructor: (@server, @channels, @nick = 'ghbot')->
+  constructor: (@server, @channels, @user, @pass, @nick = 'ghbot')->
     @paths = {}
+    #cheap way to do auth now, will OAuth
+    @header =
+        'auth': "#{@user}:#{@pass}"
 
     @irc = new irc.Client @server, @nick, { @channels }
     @irc.on 'message', @handleMessage
@@ -28,6 +31,7 @@ module.exports = class Bot
     @add message[1] if command.match /!add/
     @remove message[1] if command.match /!remove/
     @poll() if command.match /!check/
+    @limit() if command.match /!limit/
 
 
   add: (path) =>
@@ -65,7 +69,7 @@ module.exports = class Bot
 
       #console.log 'polling', path, 'since', since
       
-      request.get "https://api.github.com/repos/#{owner}/#{repo}/commits?since=#{since}", (e, r, body) =>
+      request.get "https://api.github.com/repos/#{owner}/#{repo}/commits?since=#{since}", @header, (e, r, body) =>
         return if e or !body
         commits = JSON.parse(body)
 
@@ -91,10 +95,12 @@ module.exports = class Bot
     pathSplit = path.split '/'
     owner = pathSplit[0]
     repo = pathSplit[1]
-    request.get "https://api.github.com/repos/#{owner}/#{repo}",(e,r,body) =>
+    request.get "https://api.github.com/repos/#{owner}/#{repo}", @header, (e,r,body) =>
       if r.statusCode is 404
         @irc.say @channels, c.red("#{c.bold(path)} is not a valid github repo")
       else
         cb()
-        
 
+  limit : ()=>
+    request.get "https://api.github.com/rate_limit", @header, (e,r,body) =>
+      console.log r.headers

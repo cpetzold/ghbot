@@ -82,8 +82,10 @@ module.exports = class Bot
                 url:commit.url
             , (e,r, body) =>
                 committer = if commit.committer then commit.committer.login else commit.commit.committer.name
-                commit-pieces = commit.commit.message.split '\n'
-                shortlog = commit-pieces[0]
+                commit_pieces = commit.commit.message.split '\n'
+                for item in commit_pieces
+                    console.log "begin:"+item+'\n'
+                shortlog = commit_pieces[0]
                 commit.url = r.headers.location
                 commit.message = "#{c.underline(committer)} just made a change to #{c.bold(path)} #{c.red(commit.url)} : #{c.gray(shortlog)}"
                 @irc.say @channels, commit.message
@@ -103,4 +105,7 @@ module.exports = class Bot
 
   limit : ()=>
     request.get "https://api.github.com/rate_limit", @header, (e,r,body) =>
-      console.log r.headers
+      limit = r.headers['x-ratelimit-limit']
+      remaining = r.headers['x-ratelimit-remaining']
+      @irc.say @channels, "#{c.bold(remaining)} out of #{c.bold(limit)} remaining"
+

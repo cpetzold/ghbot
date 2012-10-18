@@ -1,10 +1,8 @@
 irc = require 'irc'
+connect = require 'connect'
 http = require 'http'
 request = require 'request'
-async = require 'async'
 c = require 'irc-colors'
-db = require('monk')('localhost/bot')
-repos = db.get "repos"
 
 module.exports = class Bot
 
@@ -15,97 +13,43 @@ module.exports = class Bot
         'auth': "#{@user}:#{@pass}"
 
     @irc = new irc.Client @server, @nick, { @channels }
-    @irc.on 'message', @handleMessage
 
-    setInterval @poll, 30*1000
-
-    repos.find({},{stream:true}).each (repo) =>
-      owner = repo.owner
-      r = repo.repo
-      @paths["#{owner}/#{r}"] = new Date()
+    server = connect()
+    server.use connect.favicon()
+    server.use connect.logger 'dev'
+    server.use connect.bodyParser()
+    server.use @handleRequest
+    http.createServer(server).listen 1337
       
-  handleMessage: (from, to, message) =>
-    message = message.split ' '
-    command = message[0]
+  handleRequest: (req, res) =>
+    if !req.url.match /\/commit/ or req.method isnt 'POST'
+      res.statusCode = 404
+      return res.end 'Not found'
+    
+    #TODO
+    #allow only github requests
+    #hooking up with the rest of the site
 
-    @add message[1] if command.match /!add/
-    @remove message[1] if command.match /!remove/
-    @poll() if command.match /!check/
-    @limit() if command.match /!limit/
+    payload = JSON.parse req.body.payload
+    console.log payload
 
-
-  add: (path) =>
-    if !path
-      return @irc.say @channels, c.gray("usage: !add <username>/<repository>")
-    if @paths[path]
-      return @irc.say @channels, c.gray("#{path} is already being tracked")
-    @check path, =>
+    return res.end 'woot'
+    
+    if commits?.length
       @paths[path] = new Date()
-      pathSplit = path.split '/'
-      owner = pathSplit[0]
-      repo = pathSplit[1]
-      repos.insert {owner,repo}
-      @irc.say @channels, "started tracking #{c.green.bold(path)} #{c.gray("[ http://github.com/"+path+" ]")} "
 
-  remove: (path) =>
-    if !path
-      return @irc.say @channels, c.gray("usage: !remove <username>/<repository>")
-    if !@paths[path]
-      return @irc.say @channels, c.gray("#{path} is not currently being tracked")
-      
-    delete @paths[path]
-    pathSplit = path.split '/'
-    owner = pathSplit[0]
-    repo = pathSplit[1]
-    repos.remove {owner,repo}
-    @irc.say @channels, "stopped tracking #{c.red.bold(path)}"
+      commits.forEach (commit) =>
+        commit.url = "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
+        request.post "http://git.io", form:
+            url:commit.url
+        , (e,r, body) =>
+            committer = if commit.committer then commit.committer.login else commit.commit.committer.name
+            commit_pieces = commit.commit.message.split '\n'
+            for item in commit_pieces
+                console.log "begin:"+item+'\n'
+            shortlog = commit_pieces[0]
+            commit.url = r.headers.location
+            commit.message = "#{c.underline(committer)} just made a change to #{c.bold(path)} #{c.red(commit.url)} : #{c.gray(shortlog)}"
+            @irc.say @channels, commit.message
 
-  poll: =>
-    async.forEach Object.keys(@paths), (path, cb) =>
-      pathSplit = path.split '/'
-      owner = pathSplit[0]
-      repo = pathSplit[1]
-      since = @paths[path].toISOString()
-
-      #console.log 'polling', path, 'since', since
-      
-      request.get "https://api.github.com/repos/#{owner}/#{repo}/commits?since=#{since}", @header, (e, r, body) =>
-        return if e or !body
-        commits = JSON.parse(body)
-
-        if commits?.length
-          @paths[path] = new Date()
-
-          commits.forEach (commit) =>
-            commit.url = "http://github.com/#{owner}/#{repo}/commit/#{commit.sha}"
-            request.post "http://git.io", form:
-                url:commit.url
-            , (e,r, body) =>
-                committer = if commit.committer then commit.committer.login else commit.commit.committer.name
-                commit_pieces = commit.commit.message.split '\n'
-                for item in commit_pieces
-                    console.log "begin:"+item+'\n'
-                shortlog = commit_pieces[0]
-                commit.url = r.headers.location
-                commit.message = "#{c.underline(committer)} just made a change to #{c.bold(path)} #{c.red(commit.url)} : #{c.gray(shortlog)}"
-                @irc.say @channels, commit.message
-
-    , (e) ->
-      console.log 'done', e
- 
-  check: (path,cb) =>
-    pathSplit = path.split '/'
-    owner = pathSplit[0]
-    repo = pathSplit[1]
-    request.get "https://api.github.com/repos/#{owner}/#{repo}", @header, (e,r,body) =>
-      if r.statusCode is 404
-        @irc.say @channels, c.red("#{c.bold(path)} is not a valid github repo")
-      else
-        cb()
-
-  limit : ()=>
-    request.get "https://api.github.com/rate_limit", @header, (e,r,body) =>
-      limit = r.headers['x-ratelimit-limit']
-      remaining = r.headers['x-ratelimit-remaining']
-      @irc.say @channels, "#{c.bold(remaining)} out of #{c.bold(limit)} remaining"
 

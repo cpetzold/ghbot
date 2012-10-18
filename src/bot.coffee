@@ -44,8 +44,6 @@ module.exports = class Bot
     otherAuthors = _.uniq(authors).length - 1
     repoPath = payload.repository.owner.name + '/' + payload.repository.name
 
-    # cpetzold has made 3 changes to ___
-    # cpetzold and 3 others have made changes to ___
 
     message = c.underline mainAuthor
 
@@ -58,7 +56,9 @@ module.exports = class Bot
 
     @shortUrl payload.compare, (shorturl) =>
       message += "to #{c.bold(repoPath)} #{c.red(shorturl)} : "
-      message += c.gray payload.head_commit.message
+      commit_messages = payload.head_commit.message.split "\n"
+      commit_first_line = commit_messages[0]
+      message += c.gray commit_first_line
 
       @irc.say @channels, message
       return res.end message

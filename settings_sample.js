@@ -2,8 +2,9 @@
 //After you fill it out
 //RENAME this to settings.js
 module.exports ={
-'USER': ,
-'PASS': ,
-'SERVER': ,
-'CHANNEL':[  ]
-}
+  USER: 'someghuser',
+  PASS: 'somepass',
+  SERVER: 'irc.freenode.net',
+  CHANNEL: [ '#channel' ]
+};
+

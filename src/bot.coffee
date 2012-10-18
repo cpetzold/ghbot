@@ -19,16 +19,13 @@ module.exports = class Bot
     server.use connect.logger 'dev'
     server.use connect.bodyParser()
     server.use @handleRequest
-    http.createServer(server).listen 1337
+    http.createServer(server).listen 1337, ->
+      console.log 'Running on port 1337'
       
   handleRequest: (req, res) =>
     if !req.url.match /\/commit/ or req.method isnt 'POST'
       res.statusCode = 404
       return res.end 'Not found'
-    
-    #TODO
-    #allow only github requests
-    #hooking up with the rest of the site
 
     payload = JSON.parse req.body.payload
     console.log payload

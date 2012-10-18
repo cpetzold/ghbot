@@ -9,7 +9,8 @@
     "request": "*",
     "connect": "*",
     "commander": "*",
-    "irc-colors": "*"
+    "irc-colors": "*",
+    "underscore": "*"
   },
   "devDependencies": {
     "coffee-script": "*"

@@ -20,8 +20,10 @@ module.exports = class Bot
     server.use connect.logger 'dev'
     server.use connect.bodyParser()
     server.use @handleRequest
-    http.createServer(server).listen 1337, ->
-      console.log 'Running on port 1337'
+
+    port = process.env.NODE_PORT or 1337
+    http.createServer(server).listen port, ->
+      console.log "Running on port #{port}"
 
   shortUrl: (url, cb) ->
     request.post 'http://git.io', form:
@@ -34,8 +36,7 @@ module.exports = class Bot
       res.statusCode = 404
       return res.end 'Not found'
 
-    # payload = JSON.parse req.body.payload
-    payload = req.body
+    payload = JSON.parse req.body.payload
 
     numCommits = payload.commits.length
     mainAuthor = payload.head_commit.committer.username or payload.head_commit.committer.name
